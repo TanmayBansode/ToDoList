@@ -14,13 +14,13 @@ fn main() {
      "
         );
         println!("(Choose Action)");
-
+        println!(" ");
         let mut action = String::new();
 
         io::stdin()
             .read_line(&mut action)
             .expect("Failed to read line");
-
+        println!(" ");
         let action: u32 = match action.trim().parse() {
             Ok(num) => num,
             Err(_) => 0,
@@ -41,7 +41,7 @@ fn main() {
                     io::stdin().read_line(&mut input).expect("Error");
                     input.pop();
 
-                    match input == "done" {
+                    match input == "" {
                         true => {
                             println!("-------------------------------------------------");
                             println!(" ");
