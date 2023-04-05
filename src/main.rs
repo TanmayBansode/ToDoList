@@ -1,107 +1,77 @@
-use std::io;
+use ::std::fs::File;
+use colored::*;
+use std::io::{self, BufWriter, Write};
+
+struct Task {
+    name: String,
+    status: bool,
+}
 
 fn main() {
-    let mut tasks = Vec::new();
+    println!("{}", "TODO - list".cyan());
+    println!("First Time? Use /help for commands");
+    //Main Vector of all Tasks
+    let mut alltasks: Vec<Task> = Vec::new();
+
+    //Creates a file to save data at Save Command
+    let file = File::create("data.txt").expect("Failed to create file");
+
+    //Functioning
 
     loop {
-        println!(" ");
-        println!("TO DO LIST");
-        println!(" ");
-        println!(
-            "1 > Add tasks\n\
-    2 > View List\n\
-    3 > Mark Tasks as DONE
-     "
-        );
-        println!("(Choose Action)");
-        println!(" ");
+        //Takes Input for Action
         let mut action = String::new();
-
+        println!("");
+        print!("{}", "/".green());
+        let _ = io::stdout().flush();
         io::stdin()
             .read_line(&mut action)
-            .expect("Failed to read line");
-        println!(" ");
-        let action: u32 = match action.trim().parse() {
-            Ok(num) => num,
-            Err(_) => 0,
-        };
+            .expect("Error reading from STDIN");
+
+        let action = action.trim();
+        let action: &str = &action[..];
 
         match action {
-            1 => {
-                println!("-------------------------------------------------");
-                println!(" ");
-                println!(">>Enter Tasks<<");
-                println!(" ");
-                println!("Type and Enter to add a Task.");
-                println!("(Type done when finished)");
-                println!(" ");
+            "add" => {
+                println!("");
+                println!("{}", "Add Tasks : ".green());
                 loop {
-                    let mut input = String::new();
+                    let mut entry = String::new();
+                    print!(">");
+                    let _ = io::stdout().flush();
+                    io::stdin()
+                        .read_line(&mut entry)
+                        .expect("Error reading from STDIN");
+                    let entry = entry.trim();
 
-                    io::stdin().read_line(&mut input).expect("Error");
-                    input.pop();
-
-                    match input == "" {
+                    match entry == "" {
                         true => {
-                            println!("-------------------------------------------------");
-                            println!(" ");
-                            println!(">>TASKS<<");
-                            println!(" ");
-                            let mut i: u32 = 1;
-                            for el in &tasks {
-                                println!("{i}.{}", el);
-                                i += 1;
-                            }
-
                             break;
                         }
-
                         _ => {
-                            tasks.push(input);
+                            let new: Task = Task {
+                                name: String::from(entry),
+                                status: false,
+                            };
+                            alltasks.push(new);
                         }
                     }
                 }
-                println!(" ");
-                println!("-------------------------------------------------");
-                continue;
             }
 
-            2 => {
-                println!("-------------------------------------------------");
-                println!(" ");
-                println!(">>Tasks TO DO<<");
-                println!(" ");
+            "rem" => loop {
+                println!("");
+                println!("{}", "Tasks".yellow());
                 let mut i: u32 = 1;
-                for el in &tasks {
-                    println!("{i}. {}", el);
-                    i += 1;
-                }
-                println!(" ");
-                println!("Press any key to go back");
-
-                let mut i = String::new();
-                io::stdin().read_line(&mut i).expect("Failed to read line");
-
-                println!(" ");
-                println!("-------------------------------------------------");
-                continue;
-            }
-
-            3 => loop {
-                println!("-------------------------------------------------");
-                println!(" ");
-                println!(">>TASKS<<");
-                println!(" ");
-                let mut i: u32 = 1;
-                for el in &tasks {
-                    println!("{i}.{}", el);
+                for ele in &alltasks {
+                    println!("{i}. {}", ele.name);
                     i += 1;
                 }
 
-                println!(" ");
                 println!(
-                    " (Press 0 to go back to menu) \n\
-            Serial Number of task that is done :"
+                    r"{}{}",
+                    "Select the Task Number to remove".cyan(),
+                    "( Type 0 to go back )"
                 );
                 let mut index = String::new();
                 io::stdin()
@@ -115,22 +85,144 @@ fn main() {
 
                 match index == 0 {
                     true => {
-                        println!(" ");
-                        println!("-------------------------------------------------");
                         break;
                     }
                     _ => {
-                        tasks.remove(index - 1);
+                        if index > alltasks.len() {
+                            println!("{}", "Enter an Appropriate Number".red());
+                            continue;
+                        } else {
+                            alltasks.remove(index - 1);
+                        }
                     }
                 }
             },
 
+            "done" => {
+                loop {
+                    //VIEW ALL
+                    println!("");
+                    println!("{}", "Tasks".yellow());
+                    let mut i: u32 = 1;
+                    for ele in &alltasks {
+                        if ele.status == false {
+                            println!("{i}. {}", ele.name);
+                        } else {
+                            println!("{i}. {}  {}", ele.name.green(), "✓".green());
+                        }
+                        i += 1;
+                    }
+
+                    println!(r"{}", "Select the Task Number to Mark as done".cyan(),);
+                    let mut index = String::new();
+                    io::stdin()
+                        .read_line(&mut index)
+                        .expect("Failed to read line");
+
+                    let index: usize = match index.trim().parse() {
+                        Ok(num) => num,
+                        Err(_) => 0,
+                    };
+
+                    match index == 0 {
+                        true => {
+                            break;
+                        }
+                        _ => {
+                            if index > alltasks.len() {
+                                println!("{}", "Enter an Appropriate Number".red());
+                                continue;
+                            } else {
+                                alltasks[index - 1].status = true;
+                                //Prints tasks
+                            }
+                        }
+                    }
+                }
+            }
+
+            "va" => {
+                println!("");
+                println!("{}", "Tasks".yellow());
+                let mut i: u32 = 1;
+                for ele in &alltasks {
+                    if ele.status == false {
+                        println!("{i}. {}", ele.name);
+                    } else {
+                        println!("{i}. {}  {}", ele.name.green(), "✓".green());
+                    }
+                    i += 1;
+                }
+            }
+            "vi" => {
+                println!("");
+                println!("{}", "Incomplete Tasks".red());
+                let mut i: u32 = 1;
+                for ele in &alltasks {
+                    if ele.status == false {
+                        println!("{i}. {}", ele.name);
+                    }
+                    i += 1;
+                }
+            }
+
+            "vc" => {
+                println!("");
+                println!("{}", "Complete Tasks".green());
+                let mut i: u32 = 1;
+                for ele in &alltasks {
+                    if ele.status == true {
+                        println!("{i}. {}", ele.name);
+                    }
+                    i += 1;
+                }
+            }
+            "save" => {
+                println!("");
+                let mut writer = BufWriter::new(&file);
+                writeln!(writer, "{}", "ALL Tasks").expect("Failed to write to file");
+                let mut i = 0;
+                for task in &alltasks {
+                    writeln!(writer, "{i}.  {}  (done = {})", task.name, task.status)
+                        .expect("Failed to write to file");
+                    i += 1;
+                }
+                println!("{}", "Saved Sucessfully to data.txt".green());
+            }
+
+            "sum" => {
+                println!("");
+                println!("{}", "Summary".yellow());
+                let mut comp: u32 = 0;
+                for ele in &alltasks {
+                    if ele.status == true {
+                        comp += 1;
+                    }
+                }
+                println!("Tasks Completed : {}/{}", comp, alltasks.len());
+            }
+
+            "help" => {
+                println!("");
+                println!("{}", "Commands".yellow());
+                println!(
+                    "add - Add Tasks
+rem - Remove a Task
+va - View All Tasks
+vc - View Completed Tasks
+vi - View Incomplete Tasks
+done - Mark a Task as Done
+sum - Summary
+save - Save all the tasks to a Text File named (data.txt)
+help - to open this;"
+                );
+            }
             _ => {
-                println!("-------------------------------------------------");
-                println!("!!Choose an appropriate action!!");
-                println!("-------------------------------------------------");
-                continue;
+                println!("");
+                println!("{}", "Enter Proper Command".red());
             }
         }
     }
+
 }
+
